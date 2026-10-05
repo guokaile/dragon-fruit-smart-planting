@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#05140a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>北方寒旱火龙果智能种植舱</title>
+    <!-- 字体：优先系统字体，无需联网 -->
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- 启动页 -->
+    <div id="splash" class="splash">
+        <div class="splash-ring"></div>
+        <div class="splash-core">
+            <div class="dragon-icon">🐉</div>
+            <h1>寒旱火龙果</h1>
+            <p>智能种植舱 · 蓝牙直连</p>
+        </div>
+        <div class="splash-loading">
+            <div class="loading-bar"><span></span></div>
+            <p>正在初始化农业物联网终端...</p>
+        </div>
+    </div>
+
+    <!-- 顶部状态栏 -->
+    <header class="top-bar">
+        <div class="brand">
+            <div class="logo-pulse"></div>
+            <div>
+                <h1>北方寒旱火龙果种植舱</h1>
+                <span class="subtitle">Smart Dragon Fruit Greenhouse</span>
+            </div>
+        </div>
+        <div class="status-group">
+            <div class="clock" id="clock">--:--:--</div>
+            <div class="ble-badge" id="bleStatus">
+                <span class="dot"></span>
+                <span class="text">蓝牙未连接</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="app">
+        <!-- 连接控制卡片 -->
+        <section class="connect-card glass-card">
+            <div class="connect-info">
+                <h2>🌱 种植舱控制终端</h2>
+                <p id="connectDesc">通过 USB 线连接 Arduino，实时监控并自动控制（也支持蓝牙）</p>
+            </div>
+            <div class="conn-method">
+                <label><input type="radio" name="connMethod" value="serial" checked> 🔌 USB 有线</label>
+                <label><input type="radio" name="connMethod" value="ble"> 📶 蓝牙(需HM-10)</label>
+            </div>
+            <button id="connectBtn" class="btn-primary">
+                <span class="btn-icon">🔗</span>
+                <span class="btn-text">连接种植舱</span>
+            </button>
+            <button id="disconnectBtn" class="btn-secondary hidden">
+                <span class="btn-icon">✕</span>
+                <span class="btn-text">断开连接</span>
+            </button>
+            <div class="mode-toggle">
+                <span>运行模式</span>
+                <div class="segment" id="modeSegment">
+                    <button class="active" data-mode="auto">🤖 全自动</button>
+                    <button data-mode="manual">✋ 手动</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 核心参数仪表盘 -->
+        <section class="dashboard">
+            <h2 class="section-title">
+                <span class="title-icon">📊</span>
+                实时环境监测
+                <span class="live-tag">LIVE</span>
+            </h2>
+            <div class="gauge-grid">
+                <div class="gauge-card temp">
+                    <div class="gauge-bg">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="track" cx="60" cy="60" r="52"/>
+                            <circle class="progress" cx="60" cy="60" r="52" id="tempArc"/>
+                        </svg>
+                        <div class="gauge-value">
+                            <span id="tempValue">--</span>
+                            <small>°C</small>
+                        </div>
+                    </div>
+                    <div class="gauge-label">
+                        <span class="label-icon">🌡️</span>
+                        <span>空气温度</span>
+                        <span class="range">18~35°C</span>
+                    </div>
+                </div>
+
+                <div class="gauge-card humidity">
+                    <div class="gauge-bg">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="track" cx="60" cy="60" r="52"/>
+                            <circle class="progress" cx="60" cy="60" r="52" id="humidArc"/>
+                        </svg>
+                        <div class="gauge-value">
+                            <span id="humidValue">--</span>
+                            <small>%</small>
+                        </div>
+                    </div>
+                    <div class="gauge-label">
+                        <span class="label-icon">💧</span>
+                        <span>空气湿度</span>
+                        <span class="range">60~80%</span>
+                    </div>
+                </div>
+
+                <div class="gauge-card soil">
+                    <div class="gauge-bg">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="track" cx="60" cy="60" r="52"/>
+                            <circle class="progress" cx="60" cy="60" r="52" id="soilArc"/>
+                        </svg>
+                        <div class="gauge-value">
+                            <span id="soilValue">--</span>
+                            <small>%</small>
+                        </div>
+                    </div>
+                    <div class="gauge-label">
+                        <span class="label-icon">🪴</span>
+                        <span>土壤湿度</span>
+                        <span class="range">>50%</span>
+                    </div>
+                </div>
+
+                <div class="gauge-card light">
+                    <div class="gauge-bg">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="track" cx="60" cy="60" r="52"/>
+                            <circle class="progress" cx="60" cy="60" r="52" id="lightArc"/>
+                        </svg>
+                        <div class="gauge-value">
+                            <span id="lightValue">--</span>
+                            <small>%</small>
+                        </div>
+                    </div>
+                    <div class="gauge-label">
+                        <span class="label-icon">☀️</span>
+                        <span>光照强度</span>
+                        <span class="range">>30%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 种植舱可视化 -->
+        <section class="greenhouse-viz glass-card">
+            <h2 class="section-title">
+                <span class="title-icon">🏠</span>
+                种植舱数字孪生
+            </h2>
+            <div class="greenhouse">
+                <div class="gh-frame">
+                    <div class="gh-roof"></div>
+                    <div class="gh-walls">
+                        <div class="gh-plant plant-1">
+                            <div class="stem"></div>
+                            <div class="flower">🌵</div>
+                        </div>
+                        <div class="gh-plant plant-2">
+                            <div class="stem"></div>
+                            <div class="flower">🌺</div>
+                        </div>
+                        <div class="gh-plant plant-3">
+                            <div class="stem"></div>
+                            <div class="flower">🌵</div>
+                        </div>
+                    </div>
+                    <div class="gh-devices">
+                        <div class="device light-device" id="vizLight">
+                            <div class="device-icon">💡</div>
+                            <span>补光灯</span>
+                            <div class="glow"></div>
+                        </div>
+                        <div class="device mist-device" id="vizMist">
+                            <div class="device-icon">🌫️</div>
+                            <span>雾化器</span>
+                            <div class="mist"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="gh-info">
+                    <div class="info-row">
+                        <span>系统状态</span>
+                        <strong id="systemState">待机中</strong>
+                    </div>
+                    <div class="info-row">
+                        <span>最后更新</span>
+                        <strong id="lastUpdate">--</strong>
+                    </div>
+                    <div class="info-row">
+                        <span>信号强度</span>
+                        <strong id="rssiValue">-- dBm</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 设备控制 -->
+        <section class="controls">
+            <h2 class="section-title">
+                <span class="title-icon">🎛️</span>
+                执行设备控制
+            </h2>
+            <div class="control-grid">
+                <div class="control-card" id="cardLight">
+                    <div class="control-header">
+                        <span class="control-icon">💡</span>
+                        <span>LED 补光灯</span>
+                        <span class="auto-tag" id="tagLight">自动</span>
+                    </div>
+                    <div class="control-body">
+                        <label class="switch">
+                            <input type="checkbox" id="switchLight">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="state-text" id="textLight">已关闭</span>
+                    </div>
+                </div>
+
+                <div class="control-card" id="cardMist">
+                    <div class="control-header">
+                        <span class="control-icon">🌫️</span>
+                        <span>雾化加湿器</span>
+                        <span class="auto-tag" id="tagMist">自动</span>
+                    </div>
+                    <div class="control-body">
+                        <label class="switch">
+                            <input type="checkbox" id="switchMist">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="state-text" id="textMist">已关闭</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 阈值设置 -->
+        <section class="thresholds glass-card">
+            <h2 class="section-title">
+                <span class="title-icon">⚙️</span>
+                自动控制阈值
+            </h2>
+            <div class="threshold-list">
+                <div class="threshold-item">
+                    <span>土壤湿度低于 <strong id="soilThresholdVal">30%</strong> 启动雾化器</span>
+                    <input type="range" id="soilThreshold" min="20" max="100" value="30">
+                </div>
+                <div class="threshold-item">
+                    <span>光照强度低于 <strong id="lightThresholdVal">30%</strong> 开启补光灯</span>
+                    <input type="range" id="lightThreshold" min="10" max="100" value="30">
+                </div>
+                <div class="threshold-item">
+                    <span>空气温度高于 <strong id="tempThresholdVal">40°C</strong> 启动通风</span>
+                    <input type="range" id="tempThreshold" min="25" max="100" value="40">
+                </div>
+            </div>
+        </section>
+
+        <!-- 趋势图表 -->
+        <section class="charts">
+            <h2 class="section-title">
+                <span class="title-icon">📈</span>
+                环境趋势分析
+            </h2>
+            <div class="chart-card glass-card">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </section>
+
+        <!-- AI 助手 -->
+        <section class="ai-section glass-card">
+            <h2 class="section-title">
+                <span class="title-icon">🧠</span>
+                种植 AI 助手
+            </h2>
+            <div class="ai-chat" id="aiChat">
+                <div class="ai-message">
+                    <div class="ai-avatar">🧑‍🌾</div>
+                    <div class="ai-bubble">
+                        你好！我是火龙果种植助手。当前土壤湿度正常，光照充足，植物状态良好。
+                    </div>
+                </div>
+            </div>
+            <div class="ai-input">
+                <input type="text" id="aiInput" placeholder="例如：土壤湿度太低怎么办？">
+                <button id="aiSend">发送</button>
+            </div>
+            <div class="ai-quick">
+                <button data-q="土壤湿度太低怎么办？">湿度低</button>
+                <button data-q="光照不足怎么补？">补光</button>
+                <button data-q="当前状态怎么样？">查状态</button>
+                <button data-q="如何节能减排？">节能</button>
+            </div>
+        </section>
+
+        <!-- 日志与告警 -->
+        <section class="logs">
+            <h2 class="section-title">
+                <span class="title-icon">📜</span>
+                系统日志
+            </h2>
+            <div class="log-card glass-card">
+                <ul id="logList">
+                    <li class="info"><span class="time">--:--:--</span> 系统初始化完成，等待蓝牙连接</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- 底部提示 -->
+    <footer class="footer">
+        <p>北方寒旱火龙果智能种植系统V1.0</p>
+    </footer>
+
+    <script src="js/bluetooth.js"></script>
+    <script src="js/serial.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
